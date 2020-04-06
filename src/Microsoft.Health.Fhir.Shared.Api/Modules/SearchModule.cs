@@ -16,6 +16,7 @@ using Microsoft.Health.Fhir.Core.Features.Routing;
 using Microsoft.Health.Fhir.Core.Features.Search;
 using Microsoft.Health.Fhir.Core.Features.Search.Converters;
 using Microsoft.Health.Fhir.Core.Features.Search.Expressions.Parsers;
+using Microsoft.Health.Fhir.Core.Features.Search.Parameters;
 using Microsoft.Health.Fhir.Core.Features.Search.Registry;
 using Microsoft.Health.Fhir.Core.Features.Search.SearchValues;
 using Microsoft.Health.Fhir.Core.Messages.Search;
@@ -64,15 +65,18 @@ namespace Microsoft.Health.Fhir.Api.Modules
                 .AsSelf()
                 .AsImplementedInterfaces();
 
-            // This will be replaced by datastore specific implementations
             Type searchDefinitionManagerType = typeof(SearchParameterDefinitionManager);
             services.Add(c => new FilebasedSearchParameterRegistry(
                     c.GetRequiredService<ISearchParameterDefinitionManager>(),
                     searchDefinitionManagerType.Assembly,
                     $"{searchDefinitionManagerType.Namespace}.unsupported-search-parameters.json"))
-                .Singleton()
+                .Transient()
                 .AsSelf()
                 .AsService<ISearchParameterRegistry>();
+
+            services.Add<SearchParameterSupportResolver>()
+                .Singleton()
+                .AsImplementedInterfaces();
 
             services.TypesInSameAssemblyAs<IFhirElementToSearchValueTypeConverter>()
                 .AssignableTo<IFhirElementToSearchValueTypeConverter>()
